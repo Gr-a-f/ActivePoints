@@ -23,6 +23,7 @@ namespace ActivePoints
         public double[] myI = new double[1953];
         public double[] myU = new double[1953];
         public double[] myx = new double[1953];
+        public string selectedport;
         public MainWindow()
         {
             InitializeComponent();
@@ -35,7 +36,7 @@ namespace ActivePoints
             }
         }
 
-        public static void DataProcessing(List<string> Data, ref double[] myI, ref double[] myU, ref double[] myx)
+        public void DataProcessing(List<string> Data, ref double[] myI, ref double[] myU, ref double[] myx)
         {
 
             //Dividing the data into current and voltage arrays
@@ -63,10 +64,6 @@ namespace ActivePoints
 
 
                 //Conversion of data into numerical format
-
-                //Errors in this section usually occur when the electrode is pressed several times
-                //during the measurement without waiting for the measurement to complete.
-
                 string ubin;
                 string ibin;
 
@@ -89,25 +86,32 @@ namespace ActivePoints
                     myU[i] = Convert.ToInt32(ubin, 2);
                 }
             }
-            catch { }
+            catch 
+            {
+                //Errors in this section usually occur when the electrode is pressed several times
+                //during the measurement without waiting for the measurement to complete.
+                Dispatcher.Invoke(new Action(() => TMstatus.Text = "Data transmission error. Repeat measurement"));
+            }
         }
 
         private void Bstart_Click(object sender, RoutedEventArgs e)
         {
             if (COMbox.SelectedValue == null)
             {
-                TMstatus.Text = "COM port has not been selected";
+                Dispatcher.Invoke(new Action(() => TMstatus.Text = "COM-port not detected"));
             }
             else
             {
-                Meashure();
+                Dispatcher.Invoke(new Action(() => TMstatus.Text = "Measurement started"));
+                selectedport = COMbox.SelectedValue.ToString();
+                Task task = new Task(() => Meashure());
+                task.Start();
             }
         }
         private void Meashure()
         {
-            TMstatus.Text = "Measurement in progress";
             var port = new MySerialPort();
-            port.Open(COMbox.SelectedValue.ToString());
+            port.Open(selectedport);
             while (!port.isend)
             {
             }
@@ -115,7 +119,7 @@ namespace ActivePoints
             DataProcessing(port.DataStringBinary, ref myI, ref myU, ref myx);
             Plot();
 
-            TMstatus.Text = "Measurement completed";
+            Dispatcher.Invoke(new Action(() => TMstatus.Text = "Measurement completed"));
         }
         private void Plot()
         {

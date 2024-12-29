@@ -14,7 +14,6 @@ namespace ActivePoints
     /// </summary>
     public class MySerialPort : SerialPort
     {
-        //
         public List<string> DataStringBinary = new List<string>();
         public bool isend = false;
         public MySerialPort()
