@@ -24,6 +24,8 @@ namespace ActivePoints
         public double[] myU = new double[1953];
         public double[] myx = new double[1953];
         public string selectedport;
+        public MySerialPort chosenport;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -131,6 +133,12 @@ namespace ActivePoints
             ResultU.Plot.Axes.AutoScale();
             ResultU.Refresh();
             ResultI.Refresh();
+        }
+
+        void OnDropDownOpened(object sender, EventArgs e)
+        {
+            string[] ports = SerialPort.GetPortNames();
+            COMbox.ItemsSource = ports;
         }
     }
 }

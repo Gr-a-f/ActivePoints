@@ -21,7 +21,7 @@
         <ScottPlot:WpfPlot x:Name="ResultU" Grid.Column="0" Grid.Row="1"/>
         
         <TextBlock Grid.Column="1" HorizontalAlignment="Center" Margin="0,10,0,0" TextWrapping="Wrap" Text="Avalible ports" VerticalAlignment="Top"/>
-        <ComboBox x:Name="COMbox"  Grid.Column="1" HorizontalAlignment="Center" Margin="0,31,0,0" VerticalAlignment="Top" Width="120"/>
+        <ComboBox x:Name="COMbox"  Grid.Column="1" HorizontalAlignment="Center" Margin="0,31,0,0" VerticalAlignment="Top" Width="120" DropDownOpened="OnDropDownOpened"/>
         <Button x:Name="Bstart" Grid.Column="1" Content="Start measurement" HorizontalAlignment="Center" Margin="0,58,0,0" VerticalAlignment="Top" Width="120" Click="Bstart_Click"/>
         <TextBlock x:Name="TBlock" Grid.Column="1" HorizontalAlignment="Center" Margin="0,109,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="98" Width="149"/>
         <TextBlock x:Name="TMstatus" Grid.Column="1" HorizontalAlignment="Center" Margin="0,83,0,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
