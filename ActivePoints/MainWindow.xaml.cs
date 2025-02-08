@@ -17,15 +17,11 @@ namespace ActivePoints
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
+    public delegate void OnOneMessureEnded(List<string> dataStringBinary);
     public partial class MainWindow : Window
     {
-        // There should be a total of 1953 points after all the transformations
-        public double[] myI = new double[1953];
-        public double[] myU = new double[1953];
-        public double[] myx = new double[1953];
         public string selectedport;
-        public MySerialPort chosenport;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -38,9 +34,8 @@ namespace ActivePoints
             }
         }
 
-        public void DataProcessing(List<string> Data, ref double[] myI, ref double[] myU, ref double[] myx)
+        public void DataProcessing(List<string> Data, ref List<double> myI, ref List<double> myU, ref List<double> myx)
         {
-
             //Dividing the data into current and voltage arrays
             var BinString = Data;
             var i0 = new List<string>();
@@ -75,8 +70,8 @@ namespace ActivePoints
                         + i0[i][1] + i0[i].Substring(13, 7)
                         + i0[i][2] + i0[i].Substring(21, 7)
                         + i0[i][3] + i0[i].Substring(29, 7);
-                    myI[i] = Convert.ToInt32(ibin, 2);
-                    myx[i] = i;
+                    myI.Add(Convert.ToInt32(ibin, 2));
+                    myx.Add(i);
                 }
 
                 for (int i = 0; i < u0.Count; i++)
@@ -85,7 +80,7 @@ namespace ActivePoints
                         + u0[i][1] + u0[i].Substring(13, 7)
                         + u0[i][2] + u0[i].Substring(21, 7)
                         + u0[i][3] + u0[i].Substring(29, 7);
-                    myU[i] = Convert.ToInt32(ubin, 2);
+                    myU.Add(Convert.ToInt32(ubin, 2));
                 }
             }
             catch 
@@ -104,31 +99,41 @@ namespace ActivePoints
             }
             else
             {
+                Bstart.IsEnabled = false;
                 Dispatcher.Invoke(new Action(() => TMstatus.Text = "Measurement started"));
                 selectedport = COMbox.SelectedValue.ToString();
-                Task task = new Task(() => Meashure());
+                Thread task = new Thread(() => Meashure());
                 task.Start();
             }
         }
         private void Meashure()
         {
-            var port = new MySerialPort();
-            port.Open(selectedport);
-            while (!port.isend)
-            {
-            }
-
-            DataProcessing(port.DataStringBinary, ref myI, ref myU, ref myx);
-            Plot();
-
-            Dispatcher.Invoke(new Action(() => TMstatus.Text = "Measurement completed"));
+            OnOneMessureEnded? mes;
+            mes = EndMes;
+            var port = new MySerialPort(mes);
+            port.Open("COM3");
+            ChangeStatus("Calibration");
+            port.Calibrate();
+            ChangeStatus("Calibration Ended");
         }
-        private void Plot()
+        public void ChangeStatus(string text)
+        {
+            Dispatcher.Invoke(new Action(() => TMstatus.Text = text));
+        }
+        public void EndMes(List<string> dataStringBinary)
+        {
+            List<double> I = new List<double>();
+            List<double> U = new List<double>();
+            List<double> x = new List<double>();
+            DataProcessing(dataStringBinary, ref I, ref U,ref x);
+            Plot(I, U,x);
+        }
+        private void Plot(List<double> I, List<double> U, List<double> x)
         {
             ResultU.Plot.Clear();
             ResultI.Plot.Clear();
-            ResultI.Plot.Add.Scatter(myx, myI);
-            ResultU.Plot.Add.Scatter(myx, myU);
+            ResultI.Plot.Add.Scatter(x, I);
+            ResultU.Plot.Add.Scatter(x, U);
             ResultI.Plot.Axes.AutoScale();
             ResultU.Plot.Axes.AutoScale();
             ResultU.Refresh();

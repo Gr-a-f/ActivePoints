@@ -14,25 +14,23 @@ namespace ActivePoints
     /// </summary>
     public class MySerialPort : SerialPort
     {
+        public event OnOneMessureEnded? Notify;
         public List<string> DataStringBinary = new List<string>();
-        public bool isend = false;
-        public MySerialPort()
+        bool iscalibrated = false;
+        public MySerialPort(OnOneMessureEnded? notify)
             : base()
         {
             base.BaudRate = 430800;
             base.DataBits = 8;
             base.StopBits = StopBits.One;
             base.Parity = Parity.None;
+            Notify = notify;
 
             base.DataReceived += OnDataReceived;
         }
 
         public void Open(string portName)
         {
-            if (base.IsOpen)
-            {
-                base.Close();
-            }
             base.PortName = portName;
             base.Open();
         }
@@ -50,9 +48,32 @@ namespace ActivePoints
 
             if (buffer[^1]==7)
             {
-                isend = true;
-                base.Close();
+                Notify.Invoke(DataStringBinary);
+                DataStringBinary.Clear();
             }
+        }
+        private void OnDataReceivedCalibration(object sender, SerialDataReceivedEventArgs e)
+        {
+            var serialDevice = sender as SerialPort;
+            var buffer = new byte[serialDevice.BytesToRead];
+            serialDevice.Read(buffer, 0, buffer.Length);
+            if (buffer[^1] == 7)
+            {
+                DataStringBinary.Clear();
+                iscalibrated = true;
+            }
+        }
+        public void Calibrate()
+        {
+            this.DataReceived -= OnDataReceived;
+            this.DataReceived += OnDataReceivedCalibration;
+
+            this.Write(new byte[] { 255 }, 0, 1);
+            while (!iscalibrated)
+            { }
+            Console.WriteLine("Calibrated");
+            this.DataReceived -= OnDataReceivedCalibration;
+            this.DataReceived += OnDataReceived;
         }
     }
 }
