@@ -126,10 +126,7 @@ namespace ActivePoints
             List<double> U = new List<double>();
             List<double> x = new List<double>();
             DataProcessing(dataStringBinary, ref I, ref U,ref x);
-            Plot(I, U,x);
-        }
-        private void Plot(List<double> I, List<double> U, List<double> x)
-        {
+
             ResultU.Plot.Clear();
             ResultI.Plot.Clear();
             ResultI.Plot.Add.Scatter(x, I);
